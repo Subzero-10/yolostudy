@@ -14,6 +14,7 @@
 #include <QtWidgets/QApplication>
 #include <QtWidgets/QButtonGroup>
 #include <QtWidgets/QHeaderView>
+#include <QtWidgets/QLabel>
 #include <QtWidgets/QWidget>
 
 QT_BEGIN_NAMESPACE
@@ -21,12 +22,28 @@ QT_BEGIN_NAMESPACE
 class Ui_trafficApplicationClass
 {
 public:
+    QLabel *label;
+    QLabel *label_2;
+    QLabel *label_3;
 
     void setupUi(QWidget *trafficApplicationClass)
     {
         if (trafficApplicationClass->objectName().isEmpty())
             trafficApplicationClass->setObjectName(QStringLiteral("trafficApplicationClass"));
-        trafficApplicationClass->resize(600, 400);
+        trafficApplicationClass->resize(1600, 900);
+        label = new QLabel(trafficApplicationClass);
+        label->setObjectName(QStringLiteral("label"));
+        label->setGeometry(QRect(10, 10, 1280, 720));
+        label_2 = new QLabel(trafficApplicationClass);
+        label_2->setObjectName(QStringLiteral("label_2"));
+        label_2->setGeometry(QRect(1390, 80, 171, 341));
+        QFont font;
+        font.setPointSize(19);
+        label_2->setFont(font);
+        label_3 = new QLabel(trafficApplicationClass);
+        label_3->setObjectName(QStringLiteral("label_3"));
+        label_3->setGeometry(QRect(1400, 480, 141, 301));
+        label_3->setFont(font);
 
         retranslateUi(trafficApplicationClass);
 
@@ -36,6 +53,9 @@ public:
     void retranslateUi(QWidget *trafficApplicationClass)
     {
         trafficApplicationClass->setWindowTitle(QApplication::translate("trafficApplicationClass", "trafficApplication", Q_NULLPTR));
+        label->setText(QApplication::translate("trafficApplicationClass", "TextLabel", Q_NULLPTR));
+        label_2->setText(QApplication::translate("trafficApplicationClass", "TextLabel", Q_NULLPTR));
+        label_3->setText(QApplication::translate("trafficApplicationClass", "TextLabel", Q_NULLPTR));
     } // retranslateUi
 
 };

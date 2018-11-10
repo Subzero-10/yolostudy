@@ -39,6 +39,9 @@
     <ClCompile Include="yolo_console_dll.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="myThread.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <QtMoc Include="trafficApplication.h">
@@ -65,6 +68,9 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="yolo_v2_class.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="myThread.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

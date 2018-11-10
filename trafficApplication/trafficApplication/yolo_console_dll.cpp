@@ -1,6 +1,5 @@
 #include "yolo_console_dll.h"
 
-
 #ifdef _WIN32
 #define OPENCV
 #define GPU
@@ -206,10 +205,16 @@ void draw_boxes(cv::Mat mat_img, std::vector<bbox_t> result_vec, std::vector<std
 		std::string fps_str = "FPS detection: " + std::to_string(current_det_fps) + "   FPS capture: " + std::to_string(current_cap_fps) + "   car number: " + std::to_string(car_num) + "   car count: " + std::to_string(car_count);
 		putText(mat_img, fps_str, cv::Point2f(10, 20), cv::FONT_HERSHEY_COMPLEX_SMALL, 1.2, cv::Scalar(50, 255, 0), 2);
 		//在这加计数
+		carnum = car_num;
+		carcount = car_count;
 	}
 }
 #endif    // OPENCV
 
+cv::Mat mat;
+int fps;
+int carnum;
+int carcount;
 
 void show_console_result(std::vector<bbox_t> const result_vec, std::vector<std::string> const obj_names) {
 	for (auto &i : result_vec) {
@@ -233,11 +238,11 @@ std::vector<std::string> objects_names_from_file(std::string const filename) {
 int yolo_console_dll::startyolo()
 {
 	int argc = 5;
-	char *argv[5];
+	char *argv[4];
 	std::string  names_file = "coco.names";
 	std::string  cfg_file = "yolov3.cfg";
 	std::string  weights_file = "yolov3.weights";
-	std::string filename = "test2.mp4";
+	std::string filename = "test1.mp4";
 
 	//if (argc > 4) {    //voc.names yolo-voc.cfg yolo-voc.weights test.mp4        
 	//	names_file = argv[1];
@@ -248,10 +253,10 @@ int yolo_console_dll::startyolo()
 	//else if (argc > 1) filename = argv[1];
 
 	float const thresh = (argc > 5) ? std::stof(argv[5]) : 0.20;
-
+	auto obj_names = objects_names_from_file(names_file);
 	Detector detector(cfg_file, weights_file);
 
-	auto obj_names = objects_names_from_file(names_file);
+	
 	std::string out_videofile = "result.avi";
 	bool const save_output_videofile = true;
 #ifdef TRACK_OPTFLOW
@@ -416,9 +421,9 @@ int yolo_console_dll::startyolo()
 						draw_boxes(cur_frame, result_vec_draw, obj_names, current_det_fps, current_cap_fps);
 						//show_console_result(result_vec, obj_names);
 						//large_preview.draw(cur_frame);//下方预览
-						cv::namedWindow("摄像头");
-						cv::imshow("window name", cur_frame);
-						update(cur_frame);
+						//cv::namedWindow("摄像头");
+						//cv::imshow("window name", cur_frame);
+						update(cur_frame, current_cap_fps);
 						int key = cv::waitKey(3);    // 3 or 16ms
 						if (key == 'f') show_small_boxes = !show_small_boxes;
 						if (key == 'p') while (true) if (cv::waitKey(100) == 'p') break;
@@ -500,6 +505,7 @@ int yolo_console_dll::startyolo()
 
 yolo_console_dll::yolo_console_dll()
 {
+	i = 1;
 }
 
 
@@ -507,8 +513,10 @@ yolo_console_dll::~yolo_console_dll()
 {
 }
 
-void yolo_console_dll::update(cv::Mat frame)
+void yolo_console_dll::update(cv::Mat frame,int current_cap_fps)
 {
+	fps = current_cap_fps;
 	mat = frame;
+	qDebug("FPS:%d", this);
 	emit updatemat();
 }
