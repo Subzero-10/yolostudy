@@ -6,7 +6,7 @@
 #endif
 
 // To use tracking - uncomment the following line. Tracking is supported only by OpenCV 3.x
-//#define TRACK_OPTFLOW
+#define TRACK_OPTFLOW
 
 //#include "C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v9.1\include\cuda_runtime.h"
 //#pragma comment(lib, "C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v9.1/lib/x64/cudart.lib")
@@ -21,7 +21,7 @@
 #include "opencv2/videoio/videoio.hpp"
 #define OPENCV_VERSION CVAUX_STR(CV_VERSION_MAJOR)"" CVAUX_STR(CV_VERSION_MINOR)"" CVAUX_STR(CV_VERSION_REVISION)
 #pragma comment(lib, "opencv_world" OPENCV_VERSION ".lib")
-#ifdef TRACK_OPTFLOW
+#ifdef TRACK_OPTFLOW1
 #pragma comment(lib, "opencv_cudaoptflow" OPENCV_VERSION ".lib")
 #pragma comment(lib, "opencv_cudaimgproc" OPENCV_VERSION ".lib")
 #pragma comment(lib, "opencv_core" OPENCV_VERSION ".lib")
@@ -411,7 +411,7 @@ int yolo_console_dll::startyolo()
 						track_optflow_queue.push(cur_frame.clone());
 						result_vec = tracker_flow.tracking_flow(cur_frame);    // track optical flow
 						extrapolate_coords.update_result(result_vec, cur_time_extrapolate);
-						small_preview.draw(cur_frame, show_small_boxes);
+						//small_preview.draw(cur_frame, show_small_boxes);//ÏÂ·½Ô¤ÀÀ
 #endif                        
 						auto result_vec_draw = result_vec;
 						if (extrapolate_flag) {
