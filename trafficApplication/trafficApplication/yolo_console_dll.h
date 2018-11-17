@@ -17,6 +17,7 @@ extern cv::Mat mat;
 extern int fps;
 extern int carnum;
 extern int carcount;
+extern int traffic_density;
 class yolo_console_dll: public QObject
 {
 	Q_OBJECT

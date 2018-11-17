@@ -201,11 +201,12 @@ void draw_boxes(cv::Mat mat_img, std::vector<bbox_t> result_vec, std::vector<std
 			}
 		}
 	}
+	//car_count = car_count / 4 * 3;
 	if (current_det_fps >= 0 && current_cap_fps >= 0) {
 		std::string fps_str = "FPS detection: " + std::to_string(current_det_fps) + "   FPS capture: " + std::to_string(current_cap_fps) + "   car number: " + std::to_string(car_num) + "   car count: " + std::to_string(car_count);
 		putText(mat_img, fps_str, cv::Point2f(10, 20), cv::FONT_HERSHEY_COMPLEX_SMALL, 1.2, cv::Scalar(50, 255, 0), 2);
 		//在这加计数
-		carnum = car_num;
+		traffic_density = car_num *40/6/2;
 		carcount = car_count;
 	}
 }
@@ -215,6 +216,8 @@ cv::Mat mat;
 int fps;
 int carnum;
 int carcount;
+int traffic_density;
+
 
 void show_console_result(std::vector<bbox_t> const result_vec, std::vector<std::string> const obj_names) {
 	for (auto &i : result_vec) {

@@ -25,13 +25,21 @@ void trafficApplication::displayslot()
 
 void trafficApplication::displayMat(cv::Mat frame,int fps)
 {
+	float space_occupancy;
+	float car_spacing;
 	if (!frame.empty())
 	{
 		image = Mat2QImage(frame);
 		QImage newImg = image.scaled(ui->label->width(), ui->label->height());
+		space_occupancy = 4.5*traffic_density / 10;
+		if (traffic_density != 0)
+			car_spacing = 1000 / (float)traffic_density-4.5;
+		else
+			car_spacing = 25;
+
 		ui->label->setPixmap(QPixmap::fromImage(newImg));
-		ui->label_2->setText("Car Number:\n" + QString::number(carnum));
-		ui->label_3->setText("Car Count:\n" + QString::number(carcount));
+		ui->label_2->setText("Traffic Density:\n" + QString::number(traffic_density));
+		ui->label_3->setText("Car Count:\n" + QString::number(carcount)+"\n"+"Space Occupancy:\n"+ QString::number(space_occupancy) + "\n" + "Car Spacing:\n" + QString::number(car_spacing));
 	}
 }
 
