@@ -170,19 +170,38 @@ public:
 };
 
 
-void draw_boxes(cv::Mat mat_img, std::vector<bbox_t> result_vec, std::vector<std::string> obj_names,
+void draw_boxes(cv::Mat mat_img, std::vector<bbox_t> result_vec, std::vector<bbox_t> last_result_vec, std::vector<std::string> obj_names,
 	int current_det_fps = -1, int current_cap_fps = -1)
 {
 
 	int const colors[6][3] = { { 1,0,1 },{ 0,0,1 },{ 0,1,1 },{ 0,1,0 },{ 1,1,0 },{ 1,0,0 } };
 	unsigned int car_count = 0;
 	unsigned int car_num = 0;
+	float car_diatance = 0;
 	for (auto &i : result_vec) {
 		cv::Scalar color = obj_id_to_color(i.obj_id);
 		cv::rectangle(mat_img, cv::Rect(i.x, i.y, i.w, i.h), color, 2);
 		if (obj_names.size() > i.obj_id) {
 			std::string obj_name = obj_names[i.obj_id];
-			if (i.track_id > 0) obj_name += " - " + std::to_string(i.track_id);
+			if ((!obj_name.compare("car"))|| (!obj_name.compare("bus"))|| (!obj_name.compare("truck")))
+			{
+				car_num++;
+				if (i.track_id >= car_count)
+				{
+					car_count = i.track_id;
+				}
+				for (auto &ii : last_result_vec) {
+					if (i.track_id == ii.track_id)
+					{
+						//car_diatance = (i.x - ii.x) ^ 2 + (i.y - ii.y) ^ 2;
+						car_diatance = abs(((int)i.x - (int)ii.x)) * abs(((int)i.x - (int)ii.x)) + abs(((int)i.y - (int)ii.y)) * abs(((int)i.y - (int)ii.y));
+						car_diatance = abs(car_diatance);
+					}
+				}
+				if (i.track_id > 0) obj_name += " - " + std::to_string(i.track_id) + " - " + std::to_string((int)car_diatance);
+			}
+			else
+				if (i.track_id > 0) obj_name += " - " + std::to_string(i.track_id);
 			cv::Size const text_size = getTextSize(obj_name, cv::FONT_HERSHEY_COMPLEX_SMALL, 1.2, 2, 0);
 			int const max_width = (text_size.width > i.w + 2) ? text_size.width : (i.w + 2);
 			cv::rectangle(mat_img, cv::Point2f(std::max((int)i.x - 1, 0), std::max((int)i.y - 30, 0)),
@@ -190,15 +209,6 @@ void draw_boxes(cv::Mat mat_img, std::vector<bbox_t> result_vec, std::vector<std
 				color, CV_FILLED, 8, 0);
 			putText(mat_img, obj_name, cv::Point2f(i.x, i.y - 10), cv::FONT_HERSHEY_COMPLEX_SMALL, 1.2, cv::Scalar(0, 0, 0), 2);
 
-			if (obj_name.compare("car"))
-			{
-				car_num++;
-				if (i.track_id >= car_count)
-				{
-					car_count = i.track_id;
-				}
-
-			}
 		}
 	}
 	//car_count = car_count / 4 * 3;
@@ -266,6 +276,7 @@ int yolo_console_dll::startyolo()
 	Tracker_optflow tracker_flow;
 	detector.wait_stream = true;
 #endif
+	bool check_result = false;
 
 	while (true)
 	{
@@ -290,7 +301,7 @@ int yolo_console_dll::startyolo()
 				std::queue<cv::Mat> track_optflow_queue;
 				int passed_flow_frames = 0;
 				std::shared_ptr<image_t> det_image;
-				std::vector<bbox_t> result_vec, thread_result_vec;
+				std::vector<bbox_t> result_vec, thread_result_vec, last_result_vec;
 				detector.nms = 0.02;    // comment it - if track_id is not required
 				std::atomic<bool> consumed, videowrite_ready;
 				bool exit_flag = false;
@@ -421,7 +432,13 @@ int yolo_console_dll::startyolo()
 							result_vec_draw = extrapolate_coords.predict(cur_time_extrapolate);
 							cv::putText(cur_frame, "extrapolate", cv::Point2f(10, 40), cv::FONT_HERSHEY_COMPLEX_SMALL, 1.0, cv::Scalar(50, 50, 0), 2);
 						}
-						draw_boxes(cur_frame, result_vec_draw, obj_names, current_det_fps, current_cap_fps);
+						if (!check_result)
+						{
+							last_result_vec = result_vec_draw;
+							check_result = true;
+						}		
+						draw_boxes(cur_frame, result_vec_draw, last_result_vec, obj_names, current_det_fps, current_cap_fps);
+						last_result_vec = result_vec_draw;
 						//show_console_result(result_vec, obj_names);
 						//large_preview.draw(cur_frame);//下方预览
 						//cv::namedWindow("摄像头");
@@ -482,7 +499,7 @@ int yolo_console_dll::startyolo()
 				std::cout << " Time: " << spent.count() << " sec \n";
 
 				//result_vec = detector.tracking_id(result_vec);    // comment it - if track_id is not required
-				draw_boxes(mat_img, result_vec, obj_names);
+				//draw_boxes(mat_img, result_vec, obj_names);
 				cv::namedWindow("摄像头");
 				cv::imshow("window name", mat_img);
 				show_console_result(result_vec, obj_names);
