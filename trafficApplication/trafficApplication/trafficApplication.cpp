@@ -39,7 +39,7 @@ void trafficApplication::displayMat(cv::Mat frame,int fps)
 
 		ui->label->setPixmap(QPixmap::fromImage(newImg));
 		ui->label_2->setText("Traffic Density:\n" + QString::number(traffic_density));
-		ui->label_3->setText("Car Count:\n" + QString::number(carcount)+"\n"+"Space Occupancy:\n"+ QString::number(space_occupancy) + "\n" + "Car Spacing:\n" + QString::number(car_spacing));
+		ui->label_3->setText("Car Count:\n" + QString::number(carcount)+"\n"+"Space Occupancy:\n"+ QString::number(space_occupancy) + "\n" + "Car Spacing:\n" + QString::number(car_spacing) + "\n" + "Car Ave Speed:\n" + QString::number(ave_carspeed));
 	}
 }
 

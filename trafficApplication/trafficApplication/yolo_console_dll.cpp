@@ -178,6 +178,7 @@ void draw_boxes(cv::Mat mat_img, std::vector<bbox_t> result_vec, std::vector<bbo
 	unsigned int car_count = 0;
 	unsigned int car_num = 0;
 	float car_diatance = 0;
+	float car_avespeed = 0;
 	for (auto &i : result_vec) {
 		cv::Scalar color = obj_id_to_color(i.obj_id);
 		cv::rectangle(mat_img, cv::Rect(i.x, i.y, i.w, i.h), color, 2);
@@ -198,7 +199,30 @@ void draw_boxes(cv::Mat mat_img, std::vector<bbox_t> result_vec, std::vector<bbo
 						car_diatance = abs(car_diatance);
 					}
 				}
-				if (i.track_id > 0) obj_name += " - " + std::to_string(i.track_id) + " - " + std::to_string((int)car_diatance);
+				if (car_diatance >17)
+				{
+					car_diatance = car_diatance / 2.5;
+					if (car_diatance <=15 )
+					{
+						car_diatance = 15;
+					}
+				}
+				if (i.y < 270)
+					car_diatance = car_diatance * 8;
+				else if (i.y < 540)
+					car_diatance = car_diatance * 3;
+				else if (i.y < 700)
+					car_diatance = car_diatance * 1.5;
+				if (car_diatance >200)
+				{
+					car_diatance = 0;
+					if (i.track_id > 0) obj_name += " - " + std::to_string(i.track_id);
+				}
+				else
+				{
+					if (i.track_id > 0) obj_name += " - " + std::to_string((int)car_diatance) + "km/h";//" - " + std::to_string(i.track_id) +
+				}
+				car_avespeed = car_avespeed + car_diatance;
 			}
 			else
 				if (i.track_id > 0) obj_name += " - " + std::to_string(i.track_id);
@@ -217,7 +241,8 @@ void draw_boxes(cv::Mat mat_img, std::vector<bbox_t> result_vec, std::vector<bbo
 		putText(mat_img, fps_str, cv::Point2f(10, 20), cv::FONT_HERSHEY_COMPLEX_SMALL, 1.2, cv::Scalar(50, 255, 0), 2);
 		//在这加计数
 		traffic_density = car_num *40/6/2;
-		carcount = car_count;
+		ave_carspeed = car_avespeed / car_num;
+		carcount = car_count;		
 	}
 }
 #endif    // OPENCV
@@ -227,6 +252,7 @@ int fps;
 int carnum;
 int carcount;
 int traffic_density;
+float ave_carspeed;
 
 
 void show_console_result(std::vector<bbox_t> const result_vec, std::vector<std::string> const obj_names) {

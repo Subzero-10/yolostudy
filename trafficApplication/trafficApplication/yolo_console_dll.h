@@ -18,6 +18,7 @@ extern int fps;
 extern int carnum;
 extern int carcount;
 extern int traffic_density;
+extern float ave_carspeed;
 class yolo_console_dll: public QObject
 {
 	Q_OBJECT
