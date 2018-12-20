@@ -1,4 +1,5 @@
 #include "yolo_console_dll.h"
+#include "math.h"
 
 #ifdef _WIN32
 #define OPENCV
@@ -179,6 +180,8 @@ void draw_boxes(cv::Mat mat_img, std::vector<bbox_t> result_vec, std::vector<bbo
 	unsigned int car_num = 0;
 	float car_diatance = 0;
 	float car_avespeed = 0;
+
+
 	for (auto &i : result_vec) {
 		cv::Scalar color = obj_id_to_color(i.obj_id);
 		cv::rectangle(mat_img, cv::Rect(i.x, i.y, i.w, i.h), color, 2);
@@ -197,8 +200,23 @@ void draw_boxes(cv::Mat mat_img, std::vector<bbox_t> result_vec, std::vector<bbo
 						//car_diatance = (i.x - ii.x) ^ 2 + (i.y - ii.y) ^ 2;
 						car_diatance = abs(((int)i.x - (int)ii.x)) * abs(((int)i.x - (int)ii.x)) + abs(((int)i.y - (int)ii.y)) * abs(((int)i.y - (int)ii.y));
 						car_diatance = abs(car_diatance);
+						/*if (((int)i.y-400 > 0)&& ((int)ii.y - 400 < 0))
+						{
+							car_flow++;
+						}*/
+						if (i.x >= 1050 && i.x <= 1450 && i.y <= 500)
+						{
+							if (ii.x >= 1050 && ii.x <= 1450 && ii.y >= 500)
+							{
+								if (car_id != i.track_id)
+									timer_start = true;
+								car_id = i.track_id;
+							}
+
+						}
 					}
 				}
+				
 				if (car_diatance >17)
 				{
 					car_diatance = car_diatance / 2.5;
@@ -207,12 +225,7 @@ void draw_boxes(cv::Mat mat_img, std::vector<bbox_t> result_vec, std::vector<bbo
 						car_diatance = 15;
 					}
 				}
-				if (i.y < 270)
-					car_diatance = car_diatance * 8;
-				else if (i.y < 540)
-					car_diatance = car_diatance * 3;
-				else if (i.y < 700)
-					car_diatance = car_diatance * 1.5;
+				car_diatance = car_diatance * pow(2.0, (double)(3- i.y/270))*4/ current_det_fps;
 				if (car_diatance >200)
 				{
 					car_diatance = 0;
@@ -223,6 +236,8 @@ void draw_boxes(cv::Mat mat_img, std::vector<bbox_t> result_vec, std::vector<bbo
 					if (i.track_id > 0) obj_name += " - " + std::to_string((int)car_diatance) + "km/h";//" - " + std::to_string(i.track_id) +
 				}
 				car_avespeed = car_avespeed + car_diatance;
+
+
 			}
 			else
 				if (i.track_id > 0) obj_name += " - " + std::to_string(i.track_id);
@@ -242,7 +257,10 @@ void draw_boxes(cv::Mat mat_img, std::vector<bbox_t> result_vec, std::vector<bbo
 		//在这加计数
 		traffic_density = car_num *40/6/2;
 		ave_carspeed = car_avespeed / car_num;
-		carcount = car_count;		
+		carcount = car_count;	
+		cv::rectangle(mat_img, cv::Point2f(1450, 1000),
+			cv::Point2f(1050, 500),
+			cvScalar(255, 255, 255), 3, 8, 0);
 	}
 }
 #endif    // OPENCV
@@ -252,7 +270,10 @@ int fps;
 int carnum;
 int carcount;
 int traffic_density;
+//int car_flow = 0;
 float ave_carspeed;
+bool timer_start = false;
+unsigned int car_id;
 
 
 void show_console_result(std::vector<bbox_t> const result_vec, std::vector<std::string> const obj_names) {
@@ -565,4 +586,8 @@ void yolo_console_dll::update(cv::Mat frame,int current_cap_fps)
 	mat = frame;
 	qDebug("FPS:%d", this);
 	emit updatemat();
+}
+
+void yolo_console_dll::updatetime()
+{
 }

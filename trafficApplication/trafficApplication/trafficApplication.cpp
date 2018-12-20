@@ -13,7 +13,17 @@ trafficApplication::trafficApplication(QWidget *parent)
 	thread1->yolo1 = yolo;
 	//QObject::connect(thread1, SIGNAL(updatematT()), this, SLOT(displayslot()));
 	thread1->start();
-	
+
+	timer = new QTimer;  //初始化定时器
+	isStart = false;
+	timer2 = new QTimer;  //初始化定时器
+	isStart2 = false;
+	sec = 0;
+	sec2 = 0;
+	connect(timer, SIGNAL(timeout()), this, SLOT(updateTime()));
+	connect(timer2, SIGNAL(timeout()), this, SLOT(updateTime2()));
+	connect(ui->pushButton, SIGNAL(clicked()), this, SLOT(startTime()));
+	connect(ui->pushButton_2, SIGNAL(clicked()), this, SLOT(stopTime()));
 }
 
 void trafficApplication::displayslot()
@@ -27,6 +37,7 @@ void trafficApplication::displayMat(cv::Mat frame,int fps)
 {
 	float space_occupancy;
 	float car_spacing;
+	int checksec2 = 0;
 	if (!frame.empty())
 	{
 		image = Mat2QImage(frame);
@@ -37,9 +48,17 @@ void trafficApplication::displayMat(cv::Mat frame,int fps)
 		else
 			car_spacing = 25;
 
+		if (timer_start)
+		{
+			checksec2 = stopTime2();
+			startTime2();
+			timer_start = false;
+			ui->label_2->setText("Head time interval:\n" + QString::number(checksec2) + "\n" + "Space Occupancy:\n" + "0:\n");
+		}
+
 		ui->label->setPixmap(QPixmap::fromImage(newImg));
-		ui->label_2->setText("Traffic Density:\n" + QString::number(traffic_density));
-		ui->label_3->setText("Car Count:\n" + QString::number(carcount)+"\n"+"Space Occupancy:\n"+ QString::number(space_occupancy) + "\n" + "Car Spacing:\n" + QString::number(car_spacing) + "\n" + "Car Ave Speed:\n" + QString::number(ave_carspeed));
+
+		ui->label_3->setText("Traffic Density:\n" + QString::number(traffic_density) + "\n" + "Car Flow::\n" + QString::number(carcount)+"\n"+"Space Occupancy:\n"+ QString::number(space_occupancy) + "\n" + "Car Spacing:\n" + QString::number(car_spacing) + "\n" + "Car Ave Speed:\n" + QString::number(ave_carspeed) + "\n" );
 	}
 }
 
@@ -72,4 +91,55 @@ QImage  trafficApplication::Mat2QImage(cv::Mat cvImg)
 
 	return qImg;
 
+}
+
+void trafficApplication::updateTime()
+{
+	sec++;
+}
+
+void trafficApplication::startTime()
+{
+	if (!isStart)
+	{
+		timer->start(1000);
+		isStart = true;
+	}
+		
+}
+
+void trafficApplication::stopTime()
+{
+	if (isStart)
+	{
+		timer->stop();
+		isStart = false;
+	}
+}
+
+void trafficApplication::updateTime2()
+{
+	sec2++;
+}
+
+void trafficApplication::startTime2()
+{
+	if (!isStart2)
+	{
+		timer2->start(1000);
+		isStart2 = true;
+	}
+}
+
+int trafficApplication::stopTime2()
+{
+	int checksec2 = 0;
+	if (isStart2)
+	{
+		timer2->stop();
+		isStart2 = false;
+	}
+	checksec2 = sec2;
+	sec2 = 0;
+	return checksec2;
 }

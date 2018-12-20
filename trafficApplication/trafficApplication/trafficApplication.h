@@ -6,6 +6,7 @@
 #include "opencv2/core/version.hpp"
 //#include "yolo_console_dll.h"
 #include "myThread.h"
+#include <QTimer>
 
 class trafficApplication : public QWidget
 {
@@ -17,14 +18,25 @@ public:
 	QImage  trafficApplication::Mat2QImage(cv::Mat cvImg);
 	myThread *thread1;
 	yolo_console_dll *yolo;
+	int sec;
+	int sec2;
+	void startTime2();
+	int stopTime2();
 
 private:
 	Ui::trafficApplicationClass *ui;
 	QTimer *timer;
+	QTimer *timer2;
 	QImage image;
+	bool isStart;
+	bool isStart2;
 	
 	
-	public slots:
+public slots:
 	void displayslot();
+	void updateTime();
+	void startTime();
+	void stopTime();
+	void updateTime2();
 
 };

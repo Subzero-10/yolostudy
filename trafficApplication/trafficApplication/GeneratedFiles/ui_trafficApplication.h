@@ -15,6 +15,7 @@
 #include <QtWidgets/QButtonGroup>
 #include <QtWidgets/QHeaderView>
 #include <QtWidgets/QLabel>
+#include <QtWidgets/QPushButton>
 #include <QtWidgets/QWidget>
 
 QT_BEGIN_NAMESPACE
@@ -25,6 +26,8 @@ public:
     QLabel *label;
     QLabel *label_2;
     QLabel *label_3;
+    QPushButton *pushButton;
+    QPushButton *pushButton_2;
 
     void setupUi(QWidget *trafficApplicationClass)
     {
@@ -44,6 +47,12 @@ public:
         label_3->setObjectName(QStringLiteral("label_3"));
         label_3->setGeometry(QRect(1400, 480, 141, 301));
         label_3->setFont(font);
+        pushButton = new QPushButton(trafficApplicationClass);
+        pushButton->setObjectName(QStringLiteral("pushButton"));
+        pushButton->setGeometry(QRect(1400, 20, 75, 23));
+        pushButton_2 = new QPushButton(trafficApplicationClass);
+        pushButton_2->setObjectName(QStringLiteral("pushButton_2"));
+        pushButton_2->setGeometry(QRect(1400, 50, 75, 23));
 
         retranslateUi(trafficApplicationClass);
 
@@ -56,6 +65,8 @@ public:
         label->setText(QApplication::translate("trafficApplicationClass", "TextLabel", Q_NULLPTR));
         label_2->setText(QApplication::translate("trafficApplicationClass", "TextLabel", Q_NULLPTR));
         label_3->setText(QApplication::translate("trafficApplicationClass", "TextLabel", Q_NULLPTR));
+        pushButton->setText(QApplication::translate("trafficApplicationClass", "start", Q_NULLPTR));
+        pushButton_2->setText(QApplication::translate("trafficApplicationClass", "stop", Q_NULLPTR));
     } // retranslateUi
 
 };

@@ -18,7 +18,10 @@ extern int fps;
 extern int carnum;
 extern int carcount;
 extern int traffic_density;
+extern unsigned int car_id;
+//extern int car_flow;
 extern float ave_carspeed;
+extern bool timer_start;
 class yolo_console_dll: public QObject
 {
 	Q_OBJECT
@@ -28,6 +31,7 @@ public:
 	int startyolo();
 	~yolo_console_dll();
 	void update(cv::Mat frame,int current_cap_fps);
+	void updatetime();
 
 	int i;
 
