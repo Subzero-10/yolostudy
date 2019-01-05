@@ -20,6 +20,9 @@ trafficApplication::trafficApplication(QWidget *parent)
 	isStart2 = false;
 	sec = 0;
 	sec2 = 0;
+	cartimeCount = 0;
+	cartimePlus = 0;
+	timePlus = 0;
 	connect(timer, SIGNAL(timeout()), this, SLOT(updateTime()));
 	connect(timer2, SIGNAL(timeout()), this, SLOT(updateTime2()));
 	connect(ui->pushButton, SIGNAL(clicked()), this, SLOT(startTime()));
@@ -51,9 +54,18 @@ void trafficApplication::displayMat(cv::Mat frame,int fps)
 		if (timer_start)
 		{
 			checksec2 = stopTime2();
+			timePlus = timePlus + checksec2;
+			cartimeCount++;
+			if (cartimeCount == 5)
+			{
+				ui->label_4->setText( "Time Occupancy:\n" + QString::number(cartimePlus/ timePlus*200) + "%\n");
+				cartimeCount = 0;
+				cartimePlus = 0;
+				timePlus = 0;
+			}
 			startTime2();
 			timer_start = false;
-			ui->label_2->setText("Head time interval:\n" + QString::number(checksec2) + "\n" + "Space Occupancy:\n" + "0:\n");
+			ui->label_2->setText("Head time interval:\n" + QString::number(checksec2) + "\n" + "CAR:" + QString::number(cartimeCount) + "\n");
 		}
 
 		ui->label->setPixmap(QPixmap::fromImage(newImg));
@@ -141,5 +153,9 @@ int trafficApplication::stopTime2()
 	}
 	checksec2 = sec2;
 	sec2 = 0;
+	if (car_speed != 0)
+		cartimePlus = cartimePlus + 4.5 / ((float)car_speed / 3.6);
+	else
+		cartimePlus = cartimePlus + checksec2;
 	return checksec2;
 }

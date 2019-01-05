@@ -20,6 +20,9 @@ public:
 	yolo_console_dll *yolo;
 	int sec;
 	int sec2;
+	int cartimeCount;
+	float cartimePlus;
+	int timePlus;
 	void startTime2();
 	int stopTime2();
 

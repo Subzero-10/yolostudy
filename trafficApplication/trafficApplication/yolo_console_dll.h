@@ -18,6 +18,7 @@ extern int fps;
 extern int carnum;
 extern int carcount;
 extern int traffic_density;
+extern double car_speed;
 extern unsigned int car_id;
 //extern int car_flow;
 extern float ave_carspeed;

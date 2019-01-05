@@ -28,6 +28,7 @@ public:
     QLabel *label_3;
     QPushButton *pushButton;
     QPushButton *pushButton_2;
+    QLabel *label_4;
 
     void setupUi(QWidget *trafficApplicationClass)
     {
@@ -39,7 +40,7 @@ public:
         label->setGeometry(QRect(10, 10, 1280, 720));
         label_2 = new QLabel(trafficApplicationClass);
         label_2->setObjectName(QStringLiteral("label_2"));
-        label_2->setGeometry(QRect(1390, 80, 171, 341));
+        label_2->setGeometry(QRect(1390, 80, 171, 161));
         QFont font;
         font.setPointSize(19);
         label_2->setFont(font);
@@ -53,6 +54,10 @@ public:
         pushButton_2 = new QPushButton(trafficApplicationClass);
         pushButton_2->setObjectName(QStringLiteral("pushButton_2"));
         pushButton_2->setGeometry(QRect(1400, 50, 75, 23));
+        label_4 = new QLabel(trafficApplicationClass);
+        label_4->setObjectName(QStringLiteral("label_4"));
+        label_4->setGeometry(QRect(1390, 280, 161, 131));
+        label_4->setFont(font);
 
         retranslateUi(trafficApplicationClass);
 
@@ -67,6 +72,7 @@ public:
         label_3->setText(QApplication::translate("trafficApplicationClass", "TextLabel", Q_NULLPTR));
         pushButton->setText(QApplication::translate("trafficApplicationClass", "start", Q_NULLPTR));
         pushButton_2->setText(QApplication::translate("trafficApplicationClass", "stop", Q_NULLPTR));
+        label_4->setText(QApplication::translate("trafficApplicationClass", "TextLabel", Q_NULLPTR));
     } // retranslateUi
 
 };

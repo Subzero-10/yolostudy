@@ -32,7 +32,7 @@
      <x>1390</x>
      <y>80</y>
      <width>171</width>
-     <height>341</height>
+     <height>161</height>
     </rect>
    </property>
    <property name="font">
@@ -86,6 +86,24 @@
    </property>
    <property name="text">
     <string>stop</string>
+   </property>
+  </widget>
+  <widget class="QLabel" name="label_4">
+   <property name="geometry">
+    <rect>
+     <x>1390</x>
+     <y>280</y>
+     <width>161</width>
+     <height>131</height>
+    </rect>
+   </property>
+   <property name="font">
+    <font>
+     <pointsize>19</pointsize>
+    </font>
+   </property>
+   <property name="text">
+    <string>TextLabel</string>
    </property>
   </widget>
  </widget>
