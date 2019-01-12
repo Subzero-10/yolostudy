@@ -185,7 +185,7 @@ void draw_boxes(cv::Mat mat_img, std::vector<bbox_t> result_vec, std::vector<bbo
 	for (auto &i : result_vec) {
 		if (i.y<200)
 		{
-			continue;//针对test3视频 小于200为不感兴趣区域
+			continue;//针对test3视频  小于200为不感兴趣区域
 		}
 		cv::Scalar color = obj_id_to_color(i.obj_id);
 		cv::rectangle(mat_img, cv::Rect(i.x, i.y, i.w, i.h), color, 2);
