@@ -10,6 +10,11 @@
     <height>900</height>
    </rect>
   </property>
+  <property name="font">
+   <font>
+    <pointsize>19</pointsize>
+   </font>
+  </property>
   <property name="windowTitle">
    <string>trafficApplication</string>
   </property>
@@ -48,9 +53,9 @@
    <property name="geometry">
     <rect>
      <x>1400</x>
-     <y>480</y>
+     <y>460</y>
      <width>141</width>
-     <height>301</height>
+     <height>321</height>
     </rect>
    </property>
    <property name="font">
@@ -92,15 +97,28 @@
    <property name="geometry">
     <rect>
      <x>1390</x>
-     <y>280</y>
+     <y>240</y>
      <width>161</width>
-     <height>131</height>
+     <height>61</height>
     </rect>
    </property>
    <property name="font">
     <font>
      <pointsize>19</pointsize>
     </font>
+   </property>
+   <property name="text">
+    <string>TextLabel</string>
+   </property>
+  </widget>
+  <widget class="QLabel" name="label_5">
+   <property name="geometry">
+    <rect>
+     <x>1390</x>
+     <y>340</y>
+     <width>181</width>
+     <height>71</height>
+    </rect>
    </property>
    <property name="text">
     <string>TextLabel</string>

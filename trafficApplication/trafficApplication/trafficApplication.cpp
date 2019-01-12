@@ -41,10 +41,16 @@ void trafficApplication::displayMat(cv::Mat frame,int fps)
 	float space_occupancy;
 	float car_spacing;
 	int checksec2 = 0;
-	if (!frame.empty())
+	bool car_congestion = true;
+	if (!frame.empty()&& frame.u != NULL)
 	{
-		image = Mat2QImage(frame);
-		QImage newImg = image.scaled(ui->label->width(), ui->label->height());
+		if (frame.u != NULL)
+		{
+			image = Mat2QImage(frame);
+			QImage newImg = image.scaled(ui->label->width(), ui->label->height());
+			ui->label->setPixmap(QPixmap::fromImage(newImg));
+		}
+
 		space_occupancy = 4.5*traffic_density / 10;
 		if (traffic_density != 0)
 			car_spacing = 1000 / (float)traffic_density-4.5;
@@ -67,8 +73,19 @@ void trafficApplication::displayMat(cv::Mat frame,int fps)
 			timer_start = false;
 			ui->label_2->setText("Head time interval:\n" + QString::number(checksec2) + "\n" + "CAR:" + QString::number(cartimeCount) + "\n");
 		}
-
-		ui->label->setPixmap(QPixmap::fromImage(newImg));
+		if (space_occupancy>65)
+		{
+			ui->label_5->setText("Vehicle Congestion£¡\n");
+			car_congestion = true;
+		}
+		else if (car_congestion)
+		{
+			if (space_occupancy<55)
+			{
+				ui->label_5->setText("Vehicle Smooth£¡\n");
+				car_congestion = false;
+			}
+		}
 
 		ui->label_3->setText("Traffic Density:\n" + QString::number(traffic_density) + "\n" + "Car Flow::\n" + QString::number(carcount)+"\n"+"Space Occupancy:\n"+ QString::number(space_occupancy) + "\n" + "Car Spacing:\n" + QString::number(car_spacing) + "\n" + "Car Ave Speed:\n" + QString::number(ave_carspeed) + "\n" );
 	}

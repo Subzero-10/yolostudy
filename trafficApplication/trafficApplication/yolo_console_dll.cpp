@@ -170,8 +170,7 @@ public:
 
 };
 
-
-void draw_boxes(cv::Mat mat_img, std::vector<bbox_t> result_vec, std::vector<bbox_t> last_result_vec, std::vector<std::string> obj_names,
+void draw_boxes(cv::Mat mat_img, std::vector<bbox_t> result_vec, std::vector<bbox_t> last_result_vec, std::vector<bbox_t> llast_result_vec, double *car_last_velocity,std::vector<std::string> obj_names,
 	int current_det_fps = -1, int current_cap_fps = -1)
 {
 
@@ -180,9 +179,14 @@ void draw_boxes(cv::Mat mat_img, std::vector<bbox_t> result_vec, std::vector<bbo
 	unsigned int car_num = 0;
 	double car_diatance = 0;
 	float car_avespeed = 0;
+	bool car_retrograde = false;
 
 
 	for (auto &i : result_vec) {
+		if (i.y<200)
+		{
+			continue;//针对test3视频 小于200为不感兴趣区域
+		}
 		cv::Scalar color = obj_id_to_color(i.obj_id);
 		cv::rectangle(mat_img, cv::Rect(i.x, i.y, i.w, i.h), color, 2);
 		if (obj_names.size() > i.obj_id) {
@@ -226,10 +230,30 @@ void draw_boxes(cv::Mat mat_img, std::vector<bbox_t> result_vec, std::vector<bbo
 							}
 
 						}
+						for (auto &iii : llast_result_vec) {
+							if (i.track_id == iii.track_id)
+							{
+								if (abs((int)i.x - 900) > abs((int)iii.x - 900) && i.y > iii.y && (88.0 / 75.0)*(double)i.x - (1080.0 - (double)i.y) > (880.0 / 7.5))//计算逆行范围
+								{
+									car_retrograde = true;
+								}
+								else
+								{
+									car_retrograde = false;
+								}
+								break;
+							}
+						}//计算逆行
+						break;
 					}
 				}
 				
-				if (car_diatance >17)
+				if (i.track_id > 0 && car_retrograde)
+				{
+					obj_name = "xx" + obj_name;
+				}
+
+				if (car_diatance >17&& i.y > 800)
 				{
 					//car_diatance = car_diatance / 1.5;
 					if (car_diatance >12 )
@@ -238,6 +262,7 @@ void draw_boxes(cv::Mat mat_img, std::vector<bbox_t> result_vec, std::vector<bbo
 					}
 				}
 				car_diatance = 2*car_diatance * pow(1.5, (double)(3.0- (double)i.y/270.0))*4/ current_det_fps;
+
 				if (car_diatance >200)
 				{
 					car_diatance = 0;
@@ -246,12 +271,36 @@ void draw_boxes(cv::Mat mat_img, std::vector<bbox_t> result_vec, std::vector<bbo
 				else
 				{
 					std::string str;
-					str = std::to_string(car_diatance);
+					double car_diatance1;
+					if (i.track_id > 0) 
+					{
+						
+						if (car_last_velocity[(int)i.track_id%1000] != 0)
+						{
+							car_diatance1 = car_last_velocity[(int)i.track_id % 1000] + (car_diatance - car_last_velocity[(int)i.track_id % 1000])*0.065;
+						}
+						else
+						{
+							if (car_diatance >20)
+							{
+								car_diatance = car_diatance / 1.8;
+								if (car_diatance >12)
+								{
+									//car_diatance = car_diatance / 1.5;
+								}
+							}
+							car_diatance1 = car_diatance;
+						}
+						
+						if (car_diatance == 0) car_diatance1 = 0;
+						car_last_velocity[(int)i.track_id%1000] = car_diatance1;
+					}
+
+					str = std::to_string(car_diatance1);
 					str = str.substr(0, str.size() - 5);
 					if (i.track_id > 0) obj_name += " - " + str + "km/h";//" - " + std::to_string(i.track_id) +
 				}
 				car_avespeed = car_avespeed + car_diatance;
-
 
 			}
 			else
@@ -273,6 +322,9 @@ void draw_boxes(cv::Mat mat_img, std::vector<bbox_t> result_vec, std::vector<bbo
 		traffic_density = car_num *40/6/2;
 		ave_carspeed = car_avespeed / car_num;
 		carcount = car_count;	
+		//cv::Point start = cv::Point(150, 1080);
+		//cv::Point end = cv::Point(850, 200);
+		//cv::line(mat_img, start, end, cv::Scalar(0, 255, 255));
 		cv::rectangle(mat_img, cv::Point2f(1450, 1000),
 			cv::Point2f(1050, 500),
 			cvScalar(255, 255, 255), 3, 8, 0);
@@ -318,7 +370,7 @@ int yolo_console_dll::startyolo()
 	std::string  names_file = "coco.names";
 	std::string  cfg_file = "yolov3.cfg";
 	std::string  weights_file = "yolov3.weights";
-	std::string filename = "test1.mp4";
+	std::string filename = "test3.mp4";
 
 	//if (argc > 4) {    //voc.names yolo-voc.cfg yolo-voc.weights test.mp4        
 	//	names_file = argv[1];
@@ -364,7 +416,10 @@ int yolo_console_dll::startyolo()
 				std::queue<cv::Mat> track_optflow_queue;
 				int passed_flow_frames = 0;
 				std::shared_ptr<image_t> det_image;
-				std::vector<bbox_t> result_vec, thread_result_vec, last_result_vec;
+				std::vector<bbox_t> result_vec, thread_result_vec;
+				std::vector<bbox_t> last_result_vec, last_result_vec1, last_result_vec2, last_result_vec3, last_result_vec4, last_result_vec5, last_result_vec6, last_result_vec7, last_result_vec8;
+				double car_last_velocity[1000];
+				memset(car_last_velocity, 0, 1000);
 				detector.nms = 0.02;    // comment it - if track_id is not required
 				std::atomic<bool> consumed, videowrite_ready;
 				bool exit_flag = false;
@@ -498,15 +553,35 @@ int yolo_console_dll::startyolo()
 						if (!check_result)
 						{
 							last_result_vec = result_vec_draw;
+							last_result_vec1 = result_vec_draw;
+							last_result_vec2 = result_vec_draw;
+							last_result_vec3 = result_vec_draw;
+							last_result_vec4 = result_vec_draw;
+							last_result_vec5 = result_vec_draw;
+							last_result_vec6 = result_vec_draw;
+							last_result_vec7 = result_vec_draw;
+							last_result_vec8 = result_vec_draw;
 							check_result = true;
-						}		
-						draw_boxes(cur_frame, result_vec_draw, last_result_vec, obj_names, current_det_fps, current_cap_fps);
+						}	
+						draw_boxes(cur_frame, result_vec_draw, last_result_vec,last_result_vec8, car_last_velocity, obj_names, current_det_fps, current_cap_fps);
+						last_result_vec8 = last_result_vec7;
+						last_result_vec7 = last_result_vec6;
+						last_result_vec6 = last_result_vec5;
+						last_result_vec5 = last_result_vec4;
+						last_result_vec4 = last_result_vec3;
+						last_result_vec3 = last_result_vec2;
+						last_result_vec2 = last_result_vec1;
+						last_result_vec1 = last_result_vec;
 						last_result_vec = result_vec_draw;
 						//show_console_result(result_vec, obj_names);
 						//large_preview.draw(cur_frame);//下方预览
 						//cv::namedWindow("摄像头");
 						//cv::imshow("window name", cur_frame);
-						update(cur_frame, current_cap_fps);
+						if (cur_frame.u != NULL)
+						{
+							update(cur_frame, current_cap_fps);
+						}
+						
 						int key = cv::waitKey(3);    // 3 or 16ms
 						if (key == 'f') show_small_boxes = !show_small_boxes;
 						if (key == 'p') while (true) if (cv::waitKey(100) == 'p') break;
