@@ -294,8 +294,17 @@ void draw_boxes(cv::Mat mat_img, std::vector<bbox_t> result_vec, std::vector<bbo
 						
 						if (car_diatance == 0) car_diatance1 = 0;
 						car_last_velocity[(int)i.track_id%1000] = car_diatance1;
+						car_diatance1 = car_diatance1;//可提高速度 方便超速测试
 					}
 
+					if ((48.0 / 70.0)*(double)i.x + (1080.0 - (double)i.y) > (300.0+ 48.0 / 70.0 * 1920.0)&& car_diatance1<2 && i.track_id > 0 )
+					{
+						obj_name = "??" + obj_name;
+					}
+					if (car_diatance1>60 && i.track_id > 0)
+					{
+						obj_name = "!!" + obj_name;
+					}
 					str = std::to_string(car_diatance1);
 					str = str.substr(0, str.size() - 5);
 					if (i.track_id > 0) obj_name += " - " + str + "km/h";//" - " + std::to_string(i.track_id) +
