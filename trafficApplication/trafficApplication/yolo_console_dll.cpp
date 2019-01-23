@@ -169,7 +169,63 @@ public:
 	}
 
 };
+void calculate_timeocc(int x1, int y1, int x2, int y2, unsigned int track_id)
+{
+	if (x1 >= 1050 && x1 <= 1450 && y1 <= 500)//Ê±¼äÕ¼ÓÐÂÊ¼ÆËã·¶Î§
+	{
+		if (x2 >= 1050 && x2 <= 1450 && y2 >= 500)
+		{
+			if (car_id != track_id)
+			{
+				timer_start = true;
+				car_speed = 2*car_diatance * pow(1.5, (double)(3.0 - (double)y1 / 270.0)) * 4 / current_det_fps;
+			}
+			car_id = track_id;
+		}
 
+	}
+}
+bool calculate_ret(unsigned int track_id, int x, int y,std::vector<bbox_t> llast_result_vec)
+{
+	for (auto &iii : llast_result_vec) {
+		if (track_id == iii.track_id)
+		{
+			if (abs((int)x - 900) > abs((int)iii.x - 900) && y > iii.y && (88.0 / 75.0)*(double)x - (1080.0 - (double)y) > (880.0 / 7.5))//ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð·ï¿½Î§
+			{
+				return true;
+			}
+			else
+			{
+				return false;
+			}
+			break;
+		}
+	}//ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+	return false;
+}
+double* calculate_speed1(int x, int y, unsigned int track_id, std::vector<bbox_t> last_result_vec, std::vector<bbox_t> llast_result_vec)
+{
+	double car_diatance = 0;
+	bool car_retrograde = false;
+	double *result = new double[2];
+
+	for (auto &ii : last_result_vec) {
+		if (track_id == ii.track_id)
+		{
+			car_diatance = abs(((int)x - (int)ii.x)) * abs(((int)x - (int)ii.x)) + abs(((int)y - (int)ii.y)) * abs(((int)y - (int)ii.y));
+			car_diatance = sqrt(car_diatance);
+
+			calculate_timeocc(x,y,ii.x,ii.y,track_id);
+			car_retrograde = calculate_ret(track_id,x,y,llast_result_vec);
+
+			break;
+		}
+	}
+	result[0] = car_diatance;
+	result[1] = 0;
+	if (car_retrograde)	result[1] = 1;
+	return result;
+}
 void draw_boxes(cv::Mat mat_img, std::vector<bbox_t> result_vec, std::vector<bbox_t> last_result_vec, std::vector<bbox_t> llast_result_vec, double *car_last_velocity,std::vector<std::string> obj_names,
 	int current_det_fps = -1, int current_cap_fps = -1)
 {
@@ -180,12 +236,13 @@ void draw_boxes(cv::Mat mat_img, std::vector<bbox_t> result_vec, std::vector<bbo
 	double car_diatance = 0;
 	float car_avespeed = 0;
 	bool car_retrograde = false;
+	double *first_result = new double[2];
 
 
 	for (auto &i : result_vec) {
 		if (i.y<200)
 		{
-			continue;//Õë¶Ôtest3ÊÓÆµ  Ð¡ÓÚ200Îª²»¸ÐÐËÈ¤ÇøÓò
+			continue;//ï¿½ï¿½ï¿½test3ï¿½ï¿½Æµ  Ð¡ï¿½ï¿½200Îªï¿½ï¿½ï¿½ï¿½ï¿½ï¿½È¤ï¿½ï¿½ï¿½ï¿½
 		}
 		cv::Scalar color = obj_id_to_color(i.obj_id);
 		cv::rectangle(mat_img, cv::Rect(i.x, i.y, i.w, i.h), color, 2);
@@ -198,6 +255,7 @@ void draw_boxes(cv::Mat mat_img, std::vector<bbox_t> result_vec, std::vector<bbo
 				{
 					car_count = i.track_id;
 				}
+				//ÕâÀï¿ªÊ¼
 				for (auto &ii : last_result_vec) {
 					if (i.track_id == ii.track_id)
 					{
@@ -233,7 +291,7 @@ void draw_boxes(cv::Mat mat_img, std::vector<bbox_t> result_vec, std::vector<bbo
 						for (auto &iii : llast_result_vec) {
 							if (i.track_id == iii.track_id)
 							{
-								if (abs((int)i.x - 900) > abs((int)iii.x - 900) && i.y > iii.y && (88.0 / 75.0)*(double)i.x - (1080.0 - (double)i.y) > (880.0 / 7.5))//¼ÆËãÄæÐÐ·¶Î§
+								if (abs((int)i.x - 900) > abs((int)iii.x - 900) && i.y > iii.y && (88.0 / 75.0)*(double)i.x - (1080.0 - (double)i.y) > (880.0 / 7.5))//ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð·ï¿½Î§
 								{
 									car_retrograde = true;
 								}
@@ -243,24 +301,16 @@ void draw_boxes(cv::Mat mat_img, std::vector<bbox_t> result_vec, std::vector<bbo
 								}
 								break;
 							}
-						}//¼ÆËãÄæÐÐ
+						}//ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 						break;
 					}
 				}
-				
+				//1.23 in this
 				if (i.track_id > 0 && car_retrograde)
 				{
 					obj_name = "xx" + obj_name;
 				}
 
-				if (car_diatance >17&& i.y > 800)
-				{
-					//car_diatance = car_diatance / 1.5;
-					if (car_diatance >12 )
-					{
-						//car_diatance = car_diatance / 1.5;
-					}
-				}
 				car_diatance = 2*car_diatance * pow(1.5, (double)(3.0- (double)i.y/270.0))*4/ current_det_fps;
 
 				if (car_diatance >200)
@@ -294,7 +344,7 @@ void draw_boxes(cv::Mat mat_img, std::vector<bbox_t> result_vec, std::vector<bbo
 						
 						if (car_diatance == 0) car_diatance1 = 0;
 						car_last_velocity[(int)i.track_id%1000] = car_diatance1;
-						car_diatance1 = car_diatance1;//¿ÉÌá¸ßËÙ¶È ·½±ã³¬ËÙ²âÊÔ
+						car_diatance1 = car_diatance1;//ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ù¶ï¿? ï¿½ï¿½ï¿½ã³¬ï¿½Ù²ï¿½ï¿½ï¿½
 					}
 
 					if ((48.0 / 70.0)*(double)i.x + (1080.0 - (double)i.y) > (300.0+ 48.0 / 70.0 * 1920.0)&& car_diatance1<2 && i.track_id > 0 )
@@ -327,7 +377,7 @@ void draw_boxes(cv::Mat mat_img, std::vector<bbox_t> result_vec, std::vector<bbo
 	if (current_det_fps >= 0 && current_cap_fps >= 0) {
 		std::string fps_str = "FPS detection: " + std::to_string(current_det_fps) + "   FPS capture: " + std::to_string(current_cap_fps) + "   car number: " + std::to_string(car_num) + "   car count: " + std::to_string(car_count);
 		putText(mat_img, fps_str, cv::Point2f(10, 20), cv::FONT_HERSHEY_COMPLEX_SMALL, 1.2, cv::Scalar(50, 255, 0), 2);
-		//ÔÚÕâ¼Ó¼ÆÊý
+		//ï¿½ï¿½ï¿½ï¿½Ó¼ï¿½ï¿½ï¿?
 		traffic_density = car_num *40/6/2;
 		ave_carspeed = car_avespeed / car_num;
 		carcount = car_count;	
@@ -546,13 +596,13 @@ int yolo_console_dll::startyolo()
 							fps_cap_counter = 0;
 						}
 
-						//large_preview.set(cur_frame, result_vec);//ÏÂ·½Ô¤ÀÀ
+						//large_preview.set(cur_frame, result_vec);//ï¿½Â·ï¿½Ô¤ï¿½ï¿½
 #ifdef TRACK_OPTFLOW
 						++passed_flow_frames;
 						track_optflow_queue.push(cur_frame.clone());
 						result_vec = tracker_flow.tracking_flow(cur_frame);    // track optical flow
 						extrapolate_coords.update_result(result_vec, cur_time_extrapolate);
-						//small_preview.draw(cur_frame, show_small_boxes);//ÏÂ·½Ô¤ÀÀ
+						//small_preview.draw(cur_frame, show_small_boxes);//ï¿½Â·ï¿½Ô¤ï¿½ï¿½
 #endif                        
 						auto result_vec_draw = result_vec;
 						if (extrapolate_flag) {
@@ -583,8 +633,8 @@ int yolo_console_dll::startyolo()
 						last_result_vec1 = last_result_vec;
 						last_result_vec = result_vec_draw;
 						//show_console_result(result_vec, obj_names);
-						//large_preview.draw(cur_frame);//ÏÂ·½Ô¤ÀÀ
-						//cv::namedWindow("ÉãÏñÍ·");
+						//large_preview.draw(cur_frame);//ï¿½Â·ï¿½Ô¤ï¿½ï¿½
+						//cv::namedWindow("ï¿½ï¿½ï¿½ï¿½Í·");
 						//cv::imshow("window name", cur_frame);
 						if (cur_frame.u != NULL)
 						{
@@ -647,7 +697,7 @@ int yolo_console_dll::startyolo()
 
 				//result_vec = detector.tracking_id(result_vec);    // comment it - if track_id is not required
 				//draw_boxes(mat_img, result_vec, obj_names);
-				cv::namedWindow("ÉãÏñÍ·");
+				cv::namedWindow("ï¿½ï¿½ï¿½ï¿½Í·");
 				cv::imshow("window name", mat_img);
 				show_console_result(result_vec, obj_names);
 				cv::waitKey(0);
