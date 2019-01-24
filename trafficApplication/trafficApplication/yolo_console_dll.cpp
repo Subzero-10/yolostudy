@@ -203,7 +203,7 @@ bool calculate_ret(unsigned int track_id, int x, int y,std::vector<bbox_t> llast
 	}//��������
 	return false;
 }
-double* calculate_speed1(int x, int y, unsigned int track_id, std::vector<bbox_t> last_result_vec, std::vector<bbox_t> llast_result_vec)
+double* calculate_speed(int x, int y, unsigned int track_id, std::vector<bbox_t> last_result_vec, std::vector<bbox_t> last_result_vec)
 {
 	double car_diatance = 0;
 	bool car_retrograde = false;
@@ -225,6 +225,29 @@ double* calculate_speed1(int x, int y, unsigned int track_id, std::vector<bbox_t
 	result[1] = 0;
 	if (car_retrograde)	result[1] = 1;
 	return result;
+}
+double increase_speed(double* car_last_velocity, int track_id, car_diatance)
+{
+	double car_diatance1;
+	if (track_id > 0) 
+	{
+		if (car_last_velocity[track_id%1000] != 0)
+		{
+			car_diatance1 = car_last_velocity[track_id % 1000] + (car_diatance - car_last_velocity[track_id % 1000])*0.065;
+		}
+		else
+		{
+			if (car_diatance >20)
+			{
+				car_diatance = car_diatance / 1.8;
+			}
+			car_diatance1 = car_diatance;
+		}
+		if (car_diatance == 0) car_diatance1 = 0;
+		car_last_velocity[track_id%1000] = car_diatance1;
+		car_diatance1 = car_diatance1;//������ٶ�? ���㳬�ٲ���
+	}
+	return car_diatance1;
 }
 void draw_boxes(cv::Mat mat_img, std::vector<bbox_t> result_vec, std::vector<bbox_t> last_result_vec, std::vector<bbox_t> llast_result_vec, double *car_last_velocity,std::vector<std::string> obj_names,
 	int current_det_fps = -1, int current_cap_fps = -1)
@@ -256,61 +279,12 @@ void draw_boxes(cv::Mat mat_img, std::vector<bbox_t> result_vec, std::vector<bbo
 					car_count = i.track_id;
 				}
 				//���￪ʼ
-				for (auto &ii : last_result_vec) {
-					if (i.track_id == ii.track_id)
-					{
-						//car_diatance = (i.x - ii.x) ^ 2 + (i.y - ii.y) ^ 2;
-						car_diatance = abs(((int)i.x - (int)ii.x)) * abs(((int)i.x - (int)ii.x)) + abs(((int)i.y - (int)ii.y)) * abs(((int)i.y - (int)ii.y));
-						car_diatance = sqrt(car_diatance);
-						/*if (((int)i.y-400 > 0)&& ((int)ii.y - 400 < 0))
-						{
-							car_flow++;
-						}*/
-						if (i.x >= 1050 && i.x <= 1450 && i.y <= 500)
-						{
-							if (ii.x >= 1050 && ii.x <= 1450 && ii.y >= 500)
-							{
-								if (car_id != i.track_id)
-								{
-									timer_start = true;
-									if (car_diatance >17)
-									{
-										//car_speed = car_diatance / 1.5;
-										if (car_diatance > 12)
-										{
-											//car_speed = car_diatance / 1.5;
-										}
-									}
-									car_speed = 2*car_diatance * pow(1.5, (double)(3.0 - (double)i.y / 270.0)) * 4 / current_det_fps;
-
-								}
-								car_id = i.track_id;
-							}
-
-						}
-						for (auto &iii : llast_result_vec) {
-							if (i.track_id == iii.track_id)
-							{
-								if (abs((int)i.x - 900) > abs((int)iii.x - 900) && i.y > iii.y && (88.0 / 75.0)*(double)i.x - (1080.0 - (double)i.y) > (880.0 / 7.5))//�������з�Χ
-								{
-									car_retrograde = true;
-								}
-								else
-								{
-									car_retrograde = false;
-								}
-								break;
-							}
-						}//��������
-						break;
-					}
-				}
-				//1.23 in this
-				if (i.track_id > 0 && car_retrograde)
+				first_result = calculate_speed(i.x, i.y, i.track_id, last_result_vec, last_result_vec) ;
+				car_diatance = first_result[0];
+				if (i.track_id > 0 && first_result[1])
 				{
 					obj_name = "xx" + obj_name;
 				}
-
 				car_diatance = 2*car_diatance * pow(1.5, (double)(3.0- (double)i.y/270.0))*4/ current_det_fps;
 
 				if (car_diatance >200)
@@ -322,30 +296,7 @@ void draw_boxes(cv::Mat mat_img, std::vector<bbox_t> result_vec, std::vector<bbo
 				{
 					std::string str;
 					double car_diatance1;
-					if (i.track_id > 0) 
-					{
-						
-						if (car_last_velocity[(int)i.track_id%1000] != 0)
-						{
-							car_diatance1 = car_last_velocity[(int)i.track_id % 1000] + (car_diatance - car_last_velocity[(int)i.track_id % 1000])*0.065;
-						}
-						else
-						{
-							if (car_diatance >20)
-							{
-								car_diatance = car_diatance / 1.8;
-								if (car_diatance >12)
-								{
-									//car_diatance = car_diatance / 1.5;
-								}
-							}
-							car_diatance1 = car_diatance;
-						}
-						
-						if (car_diatance == 0) car_diatance1 = 0;
-						car_last_velocity[(int)i.track_id%1000] = car_diatance1;
-						car_diatance1 = car_diatance1;//������ٶ�? ���㳬�ٲ���
-					}
+					car_diatance1 = increase_speed(car_last_velocity, i.track_id,car_diatance)
 
 					if ((48.0 / 70.0)*(double)i.x + (1080.0 - (double)i.y) > (300.0+ 48.0 / 70.0 * 1920.0)&& car_diatance1<2 && i.track_id > 0 )
 					{
@@ -359,7 +310,7 @@ void draw_boxes(cv::Mat mat_img, std::vector<bbox_t> result_vec, std::vector<bbo
 					str = str.substr(0, str.size() - 5);
 					if (i.track_id > 0) obj_name += " - " + str + "km/h";//" - " + std::to_string(i.track_id) +
 				}
-				car_avespeed = car_avespeed + car_diatance;
+				car_avespeed = car_avespeed + car_diatance1;
 
 			}
 			else
