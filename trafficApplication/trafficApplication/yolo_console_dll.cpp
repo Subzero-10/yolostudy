@@ -305,6 +305,7 @@ void draw_boxes(cv::Mat mat_img, std::vector<bbox_t> result_vec, std::vector<bbo
 	double car_diatance = 0;
 	float car_avespeed = 0;
 	double *first_result = new double[2];
+	bool check_car = false;
 	cv::Mat mat_cut;
 	cv::Rect rect0(950, 530, 20, 20);
 
@@ -320,6 +321,7 @@ void draw_boxes(cv::Mat mat_img, std::vector<bbox_t> result_vec, std::vector<bbo
 			std::string obj_name = obj_names[i.obj_id];
 			if ((!obj_name.compare("car"))|| (!obj_name.compare("bus"))|| (!obj_name.compare("truck")))
 			{
+				check_car = true;
 				car_num++;//如果是车辆，进行计数
 				if (i.track_id >= car_count)
 				{
@@ -363,17 +365,21 @@ void draw_boxes(cv::Mat mat_img, std::vector<bbox_t> result_vec, std::vector<bbo
 				if (i.track_id > 0) obj_name += " - " + std::to_string(i.track_id);
 			cv::Size const text_size = getTextSize(obj_name, cv::FONT_HERSHEY_COMPLEX_SMALL, 1.2, 2, 0);
 			int const max_width = (text_size.width > i.w + 2) ? text_size.width : (i.w + 2);
-			if ((!obj_name.compare("car"))|| (!obj_name.compare("bus"))|| (!obj_name.compare("truck")))
+			if (check_car)
 			{
-				cv::Rect rect(std::max((int)i.x - 1, 0), std::max((int)i.y - 30, 0), std::min((int)i.x + max_width, mat_img.cols - 1), std::min((int)i.y, mat_img.rows - 1));
+				cv::Rect rect(i.x, i.y, i.w, i.h);
 				if (rect0 == (rect0&rect)) //截取感兴趣区域
 				{
-					mat_cut = cut_mat(mat_img,rect);
+					//mat_cut = cut_mat(mat_img,rect);
+					mat_cut = mat_img(rect);
+					qDebug("OK!!!");
 				}
+				check_car = false;
 			}
 			cv::rectangle(mat_img, cv::Point2f(std::max((int)i.x - 1, 0), std::max((int)i.y - 30, 0)),
 				cv::Point2f(std::min((int)i.x + max_width, mat_img.cols - 1), std::min((int)i.y, mat_img.rows - 1)),
 				color, CV_FILLED, 8, 0);
+			//cv::rectangle(mat_img, rect0,color, CV_FILLED, 8, 0);
 			putText(mat_img, obj_name, cv::Point2f(i.x, i.y - 10), cv::FONT_HERSHEY_COMPLEX_SMALL, 1.2, cv::Scalar(0, 0, 0), 2);
 		}
 	}
