@@ -169,28 +169,48 @@ public:
 	}
 
 };
-void calculate_timeocc(int x1, int y1, int x2, int y2, unsigned int track_id)
+/*
+	事件占有率计算
+	输入量：
+	x1,y1,x2,y2（两次车辆位置）
+	track_id（跟踪ID）
+	current_det_fps（检测帧数）
+	car_diatance（车辆初步速度）
+	输出量：
+	空 全局变量timer_start  car_speed car_id
+*/
+void calculate_timeocc(int x1, int y1, int x2, int y2, unsigned int track_id, int current_det_fps,double car_diatance)
 {
 	if (x1 >= 1050 && x1 <= 1450 && y1 <= 500)//时间占有率计算范围
 	{
 		if (x2 >= 1050 && x2 <= 1450 && y2 >= 500)
 		{
-			if (car_id != track_id)
+			if (car_id != track_id)//如果第二辆是不同车通过断面，进行记时
 			{
 				timer_start = true;
-				car_speed = 2*car_diatance * pow(1.5, (double)(3.0 - (double)y1 / 270.0)) * 4 / current_det_fps;
+				car_speed = 2*car_diatance * pow(1.5, (double)(3.0 - (double)y1 / 270.0)) * 4 / current_det_fps;//画面位移到车速计算
 			}
 			car_id = track_id;
 		}
 
 	}
 }
+/*
+	逆行判断
+	输入量：
+	track_id（跟踪ID）
+	x（物体x坐标）
+	y（y坐标）
+	llast_result_vec（前8次检测结果）
+	输出量：
+	bool 是否逆行 true是false不是
+*/
 bool calculate_ret(unsigned int track_id, int x, int y,std::vector<bbox_t> llast_result_vec)
 {
 	for (auto &iii : llast_result_vec) {
 		if (track_id == iii.track_id)
 		{
-			if (abs((int)x - 900) > abs((int)iii.x - 900) && y > iii.y && (88.0 / 75.0)*(double)x - (1080.0 - (double)y) > (880.0 / 7.5))//锟斤拷锟斤拷锟斤拷锟叫凤拷围
+			if (abs((int)x - 900) > abs((int)iii.x - 900) && y > iii.y && (88.0 / 75.0)*(double)x - (1080.0 - (double)y) > (880.0 / 7.5))//逆行范围
 			{
 				return true;
 			}
@@ -200,10 +220,22 @@ bool calculate_ret(unsigned int track_id, int x, int y,std::vector<bbox_t> llast
 			}
 			break;
 		}
-	}//锟斤拷锟斤拷锟斤拷锟斤拷
+	}
 	return false;
 }
-double* calculate_speed(int x, int y, unsigned int track_id, std::vector<bbox_t> last_result_vec, std::vector<bbox_t> last_result_vec)
+/*
+	车速初步计算
+	输入量：
+	x（物体x坐标）
+	y（y坐标）
+	track_id（跟踪ID）
+	last_result_vec（上一次检测结果）
+	llast_result_vec（前8次检测结果）
+	current_det_fps（检测帧数）
+	输出量：
+	double[2]（double[0] 车辆画面位移 double[1] 是否逆行 1是0不是
+*/
+double* calculate_speed(int x, int y, unsigned int track_id, std::vector<bbox_t> last_result_vec, std::vector<bbox_t> llast_result_vec, int current_det_fps)
 {
 	double car_diatance = 0;
 	bool car_retrograde = false;
@@ -215,8 +247,8 @@ double* calculate_speed(int x, int y, unsigned int track_id, std::vector<bbox_t>
 			car_diatance = abs(((int)x - (int)ii.x)) * abs(((int)x - (int)ii.x)) + abs(((int)y - (int)ii.y)) * abs(((int)y - (int)ii.y));
 			car_diatance = sqrt(car_diatance);
 
-			calculate_timeocc(x,y,ii.x,ii.y,track_id);
-			car_retrograde = calculate_ret(track_id,x,y,llast_result_vec);
+			calculate_timeocc(x,y,ii.x,ii.y,track_id, current_det_fps, car_diatance);//时间占有率
+			car_retrograde = calculate_ret(track_id,x,y,llast_result_vec);//逆行检测
 
 			break;
 		}
@@ -226,14 +258,23 @@ double* calculate_speed(int x, int y, unsigned int track_id, std::vector<bbox_t>
 	if (car_retrograde)	result[1] = 1;
 	return result;
 }
-double increase_speed(double* car_last_velocity, int track_id, car_diatance)
+/*
+	车速平滑增加函数
+	输入量：
+	*car_last_velocity（上一次所有车速数组，一共1000个，大于1000取余）
+	track_id（跟踪ID）
+	car_diatance（粗略车速）
+	输出量：
+	double（平滑车速）
+*/
+double increase_speed(double* car_last_velocity, int track_id, double car_diatance)
 {
 	double car_diatance1;
 	if (track_id > 0) 
 	{
-		if (car_last_velocity[track_id%1000] != 0)
+		if (car_last_velocity[track_id%1000] != 0)//如果找到之前的速度
 		{
-			car_diatance1 = car_last_velocity[track_id % 1000] + (car_diatance - car_last_velocity[track_id % 1000])*0.065;
+			car_diatance1 = car_last_velocity[track_id % 1000] + (car_diatance - car_last_velocity[track_id % 1000])*0.065;//增量递增
 		}
 		else
 		{
@@ -244,8 +285,8 @@ double increase_speed(double* car_last_velocity, int track_id, car_diatance)
 			car_diatance1 = car_diatance;
 		}
 		if (car_diatance == 0) car_diatance1 = 0;
-		car_last_velocity[track_id%1000] = car_diatance1;
-		car_diatance1 = car_diatance1;//锟斤拷锟斤拷锟斤拷俣锟? 锟斤拷锟姐超锟劫诧拷锟斤拷
+		car_last_velocity[track_id%1000] = car_diatance1;//更新
+		car_diatance1 = car_diatance1;
 	}
 	return car_diatance1;
 }
@@ -263,16 +304,15 @@ void draw_boxes(cv::Mat mat_img, std::vector<bbox_t> result_vec, std::vector<bbo
 	unsigned int car_num = 0;
 	double car_diatance = 0;
 	float car_avespeed = 0;
-	bool car_retrograde = false;
 	double *first_result = new double[2];
 	cv::Mat mat_cut;
-	cv::Rect rect0(950,530,20,20)
+	cv::Rect rect0(950, 530, 20, 20);
 
 
-	for (auto &i : result_vec) {
+	for (auto &i : result_vec) {//对检测到的物体进行遍历
 		if (i.y<200)
 		{
-			continue;//锟斤拷锟絫est3锟斤拷频  小锟斤拷200为锟斤拷锟斤拷锟斤拷趣锟斤拷锟斤拷
+			continue;//y小于200为不感兴趣区域
 		}
 		cv::Scalar color = obj_id_to_color(i.obj_id);
 		cv::rectangle(mat_img, cv::Rect(i.x, i.y, i.w, i.h), color, 2);
@@ -280,21 +320,20 @@ void draw_boxes(cv::Mat mat_img, std::vector<bbox_t> result_vec, std::vector<bbo
 			std::string obj_name = obj_names[i.obj_id];
 			if ((!obj_name.compare("car"))|| (!obj_name.compare("bus"))|| (!obj_name.compare("truck")))
 			{
-				car_num++;
+				car_num++;//如果是车辆，进行计数
 				if (i.track_id >= car_count)
 				{
-					car_count = i.track_id;
+					car_count = i.track_id;//车流量为最大跟踪ID
 				}
-				//这里开始
-				first_result = calculate_speed(i.x, i.y, i.track_id, last_result_vec, last_result_vec) ;
+				first_result = calculate_speed(i.x, i.y, i.track_id, last_result_vec, last_result_vec, current_det_fps) ;//车速初步计算
 				car_diatance = first_result[0];
-				if (i.track_id > 0 && first_result[1])
+				if (i.track_id > 0 && first_result[1])//逆行车辆名字加xx
 				{
 					obj_name = "xx" + obj_name;
 				}
-				car_diatance = 2*car_diatance * pow(1.5, (double)(3.0- (double)i.y/270.0))*4/ current_det_fps;
+				car_diatance = 2*car_diatance * pow(1.5, (double)(3.0- (double)i.y/270.0))*4/ current_det_fps;//画面位移到车速计算
 
-				if (car_diatance >200)
+				if (car_diatance >200)//车速过快，异常，不计速
 				{
 					car_diatance = 0;
 					if (i.track_id > 0) obj_name += " - " + std::to_string(i.track_id);
@@ -303,21 +342,21 @@ void draw_boxes(cv::Mat mat_img, std::vector<bbox_t> result_vec, std::vector<bbo
 				{
 					std::string str;
 					double car_diatance1;
-					car_diatance1 = increase_speed(car_last_velocity, i.track_id,car_diatance)
-
-					if ((48.0 / 70.0)*(double)i.x + (1080.0 - (double)i.y) > (300.0+ 48.0 / 70.0 * 1920.0)&& car_diatance1<2 && i.track_id > 0 )
+					car_diatance1 = increase_speed(car_last_velocity, i.track_id, car_diatance);//车速平滑增加
+					car_diatance = car_diatance1;
+					if ((48.0 / 70.0)*(double)i.x + (1080.0 - (double)i.y) > (300.0+ 48.0 / 70.0 * 1920.0)&& car_diatance1<2 && i.track_id > 0 )//设定的范围内禁停
 					{
 						obj_name = "??" + obj_name;
 					}
-					if (car_diatance1>60 && i.track_id > 0)
+					if (car_diatance1>60 && i.track_id > 0)//超速
 					{
 						obj_name = "!!" + obj_name;
 					}
 					str = std::to_string(car_diatance1);
-					str = str.substr(0, str.size() - 5);
+					str = str.substr(0, str.size() - 5);//显示小数点后一位
 					if (i.track_id > 0) obj_name += " - " + str + "km/h";//" - " + std::to_string(i.track_id) +
 				}
-				car_avespeed = car_avespeed + car_diatance1;
+				car_avespeed = car_avespeed + car_diatance;
 
 			}
 			else
@@ -326,8 +365,8 @@ void draw_boxes(cv::Mat mat_img, std::vector<bbox_t> result_vec, std::vector<bbo
 			int const max_width = (text_size.width > i.w + 2) ? text_size.width : (i.w + 2);
 			if ((!obj_name.compare("car"))|| (!obj_name.compare("bus"))|| (!obj_name.compare("truck")))
 			{
-				cv::Rect rect(std::max((int)i.x - 1, 0), std::max((int)i.y - 30, 0),std::min((int)i.x + max_width, mat_img.cols - 1), std::min((int)i.y, mat_img.rows - 1)
-				if (rect0 == (rect0&rect)) 
+				cv::Rect rect(std::max((int)i.x - 1, 0), std::max((int)i.y - 30, 0), std::min((int)i.x + max_width, mat_img.cols - 1), std::min((int)i.y, mat_img.rows - 1));
+				if (rect0 == (rect0&rect)) //截取感兴趣区域
 				{
 					mat_cut = cut_mat(mat_img,rect);
 				}
@@ -342,7 +381,6 @@ void draw_boxes(cv::Mat mat_img, std::vector<bbox_t> result_vec, std::vector<bbo
 	if (current_det_fps >= 0 && current_cap_fps >= 0) {
 		std::string fps_str = "FPS detection: " + std::to_string(current_det_fps) + "   FPS capture: " + std::to_string(current_cap_fps) + "   car number: " + std::to_string(car_num) + "   car count: " + std::to_string(car_count);
 		putText(mat_img, fps_str, cv::Point2f(10, 20), cv::FONT_HERSHEY_COMPLEX_SMALL, 1.2, cv::Scalar(50, 255, 0), 2);
-		//锟斤拷锟斤拷蛹锟斤拷锟?
 		traffic_density = car_num *40/6/2;
 		ave_carspeed = car_avespeed / car_num;
 		carcount = car_count;	
