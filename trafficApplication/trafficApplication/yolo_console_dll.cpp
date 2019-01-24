@@ -249,6 +249,11 @@ double increase_speed(double* car_last_velocity, int track_id, car_diatance)
 	}
 	return car_diatance1;
 }
+cv::Mat cut_mat(cv::Mat mat_img,cv::Rect rect)
+{
+	cv::Mat image_roi = mat_img(rect);
+	return image_roi;
+}
 void draw_boxes(cv::Mat mat_img, std::vector<bbox_t> result_vec, std::vector<bbox_t> last_result_vec, std::vector<bbox_t> llast_result_vec, double *car_last_velocity,std::vector<std::string> obj_names,
 	int current_det_fps = -1, int current_cap_fps = -1)
 {
@@ -260,6 +265,8 @@ void draw_boxes(cv::Mat mat_img, std::vector<bbox_t> result_vec, std::vector<bbo
 	float car_avespeed = 0;
 	bool car_retrograde = false;
 	double *first_result = new double[2];
+	cv::Mat mat_cut;
+	cv::Rect rect0(950,530,20,20)
 
 
 	for (auto &i : result_vec) {
@@ -317,11 +324,18 @@ void draw_boxes(cv::Mat mat_img, std::vector<bbox_t> result_vec, std::vector<bbo
 				if (i.track_id > 0) obj_name += " - " + std::to_string(i.track_id);
 			cv::Size const text_size = getTextSize(obj_name, cv::FONT_HERSHEY_COMPLEX_SMALL, 1.2, 2, 0);
 			int const max_width = (text_size.width > i.w + 2) ? text_size.width : (i.w + 2);
+			if ((!obj_name.compare("car"))|| (!obj_name.compare("bus"))|| (!obj_name.compare("truck")))
+			{
+				cv::Rect rect(std::max((int)i.x - 1, 0), std::max((int)i.y - 30, 0),std::min((int)i.x + max_width, mat_img.cols - 1), std::min((int)i.y, mat_img.rows - 1)
+				if (rect0 == (rect0&rect)) 
+				{
+					mat_cut = cut_mat(mat_img,rect);
+				}
+			}
 			cv::rectangle(mat_img, cv::Point2f(std::max((int)i.x - 1, 0), std::max((int)i.y - 30, 0)),
 				cv::Point2f(std::min((int)i.x + max_width, mat_img.cols - 1), std::min((int)i.y, mat_img.rows - 1)),
 				color, CV_FILLED, 8, 0);
 			putText(mat_img, obj_name, cv::Point2f(i.x, i.y - 10), cv::FONT_HERSHEY_COMPLEX_SMALL, 1.2, cv::Scalar(0, 0, 0), 2);
-
 		}
 	}
 	//car_count = car_count / 4 * 3;
@@ -485,7 +499,7 @@ int yolo_console_dll::startyolo()
 
 							result_vec = detector.tracking_id(result_vec);
 							auto tmp_result_vec = detector.tracking_id(detected_result_vec, false);
-							small_preview.set(first_frame, tmp_result_vec);
+							//small_preview.set(first_frame, tmp_result_vec);
 
 							extrapolate_coords.new_result(tmp_result_vec, old_time_extrapolate);
 							old_time_extrapolate = cur_time_extrapolate;
